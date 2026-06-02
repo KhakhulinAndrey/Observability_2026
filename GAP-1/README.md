@@ -79,4 +79,4 @@ sudo cp promtool /usr/local/bin/
 /etc/prometheus/prometheus.yml
 
 создал сервис, запустил, проверил 
-http://localhost:9090 - см скрин
+http://localhost:9090 - см. скрин 
