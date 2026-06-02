@@ -1,0 +1,13 @@
+[Unit]
+Description=PHP-FPM Exporter
+After=network.target
+
+[Service]
+User=php_fpm_exporter
+Group=php_fpm_exporter
+Type=simple
+ExecStart=/usr/local/bin/php-fpm_exporter server --phpfpm.scrape-uri=http://localhost/status
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
