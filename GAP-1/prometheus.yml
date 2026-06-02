@@ -1,0 +1,41 @@
+# Глобальные настройки
+global:
+  scrape_interval: 15s
+
+# Конфигурация сбора метрик
+scrape_configs:
+  # Сбор метрик с самого Prometheus
+  - job_name: 'prometheus'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Сбор метрик с node_exporter (ВМ)
+  - job_name: 'node_exporter'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9100']
+
+  # Сбор метрик с mysqld_exporter (MySQL)
+  - job_name: 'mysqld_exporter'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9104']
+
+  # Сбор метрик с nginx_exporter (Nginx)
+  - job_name: 'nginx_exporter'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9113']
+
+  # Сбор метрик с php_fpm_exporter (PHP-FPM)
+  - job_name: 'php_fpm_exporter'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9253']
+
+  # Сбор метрик с blackbox_exporter (проверка доступности CMS)
+  - job_name: 'blackbox_exporter'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9115']
