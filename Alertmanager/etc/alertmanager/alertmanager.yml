@@ -1,0 +1,61 @@
+route:
+  group_by: ['alertname', 'severity']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 5m
+  receiver: 'default'
+  routes:
+    # Critical in Telegram
+    - match:
+        severity: critical
+      receiver: 'telegram'
+      continue: true
+    # Warning in Email
+    - match:
+        severity: warning
+      receiver: 'email'
+      continue: true
+
+receivers:
+  # Оповещения в Telegram
+  - name: 'telegram'
+    telegram_configs:
+      - bot_token: '8xxxxx9309:AAFxxxxxxxxxxxxxxxxxx_PATKuw'
+        chat_id: 8xxxxx35
+        api_url: 'https://api.telegram.org'
+        message: |
+          {{ range .Alerts }}
+          🚨 *{{ .Labels.severity | toUpper }}*: {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          {{ end }}
+
+  # Оповещения по Email
+  - name: 'email'
+    email_configs:
+      - to: 'xxxxx@gmail.com'
+        from: 'xxxxx@gmail.com'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: 'xxxxx@gmail.com'
+        auth_password: 'wfnbxxxxxxjhdtg'
+        send_resolved: true
+        headers:
+          Subject: '{{ .GroupLabels.severity | toUpper }}: {{ .CommonAnnotations.summary }}'
+
+  # Получатель по умолчанию (для алертов без severity или с другими уровнями)
+  - name: 'default'
+    telegram_configs:
+      - bot_token: '8xxxxx9309:AAFxxxxxxxxxxxxxxxxxx_PATKuw'
+        chat_id: 8xxxxx35
+        api_url: 'https://api.telegram.org'
+        message: |
+          {{ range .Alerts }}
+          🔔 *{{ .Labels.severity | toUpper }}*: {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          {{ end }}
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']

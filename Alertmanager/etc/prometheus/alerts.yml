@@ -1,0 +1,63 @@
+groups:
+  - name: system_alerts
+    interval: 10s
+    rules:
+      # CRITICAL: ВМ не отвечает (node_exporter недоступен)
+      - alert: InstanceDown
+        expr: up{job="node_exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Сервер {{ $labels.instance }} недоступен"
+          description: "Node Exporter не отвечает более 1 минуты. Проверьте ВМ!"
+
+      # CRITICAL: MySQL недоступен
+      - alert: MySQLDown
+        expr: up{job="mysqld_exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MySQL на {{ $labels.instance }} не отвечает"
+          description: "MySQL экспортер не отвечает. Проверьте базу данных!"
+
+      # WARNING: Высокая нагрузка на CPU (>80%)
+      - alert: HighCPU
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокая загрузка CPU на {{ $labels.instance }}"
+          description: "Загрузка CPU превысила 80%. Текущее значение: {{ $value }}%"
+
+      # WARNING: Низкое свободное место на диске (<20%)
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 20
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Мало свободного места на диске {{ $labels.instance }}"
+          description: "Свободно менее 20% на корневом разделе. Осталось: {{ $value | humanizePercentage }}"
+
+      # CRITICAL: CMS недоступен (blackbox)
+      - alert: CMSDown
+        expr: probe_success{job="blackbox_exporter"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "CMS не отвечает"
+          description: "Blackbox проверка показала, что сайт http://localhost недоступен!"
+
+      # WARNING: Медленный ответ CMS (>2 секунды)
+      - alert: CMSSlow
+        expr: probe_duration_seconds{job="blackbox_exporter"} > 2
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CMS отвечает медленно"
+          description: "Время ответа сайта превышает 2 секунды. Текущее: {{ $value }}с"
