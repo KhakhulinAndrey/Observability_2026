@@ -1,0 +1,12 @@
+stream
+  |from()
+    .measurement('nginx_access')
+    .where(lambda: "resp_code" =~ /5\d\d/)
+  |window()
+    .period(5m)
+    .every(1m)
+  |count('resp_code')
+  |alert()
+    .crit(lambda: "count" > 0)
+    .message('Обнаружены 5xx ошибки: {{ index .Fields "count" }} за последние 5 минут')
+    .telegram()
