@@ -1,0 +1,40 @@
+sources:
+  beats_in:
+    type: logstash
+    address: "0.0.0.0:5044" # Принимаем от Filebeat
+
+transforms:
+  parse_nginx:
+    type: remap
+    inputs: [beats_in]
+    source: |
+      # Проверяем, что это лог Nginx
+      if .event.dataset == "nginx.access" {
+        # Парсим сообщение регулярным выражением (VRL)
+        parsed, err = parse_regex(.message, r'^(?P<client_ip>\S+) \S+ \S+ \[(?P<timestamp>[^\]]+)\] "(?P<method>\S+) (?P<path>\S+) HTTP/(?P<http_version>\S+)" (?P<status>\d+) (?P<bytes>\d+)')
+
+        # Если ошибки нет — мержим поля в событие
+        if err == null {
+          . = merge(., parsed)
+          # Приводим типы
+          .status = to_int!(.status)
+          .bytes = to_int!(.bytes)
+          .timestamp = parse_timestamp!(.timestamp, format: "%d/%b/%Y:%H:%M:%S %z")
+          # Убираем сырое сообщение, чтобы не дублировать
+          del(.message)
+        }
+      }
+
+sinks:
+  elasticsearch_out:
+    type: elasticsearch
+    inputs: [parse_nginx]
+    endpoints: ["https://localhost:9200"]
+    auth:
+      strategy: basic
+      user: "elastic"
+      password: "dxxxxxxxxxxxxxxxxM"
+    tls:
+      verify_certificate: false
+    bulk:
+      index: "vector-nginx-%Y.%m.%d"
