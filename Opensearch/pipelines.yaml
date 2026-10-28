@@ -1,0 +1,28 @@
+log-pipeline:
+  source:
+    http:
+      port: 2021
+      ssl: false
+  processor:
+    - grok:
+        match:
+          # Указываем, что парсить нужно поле "log" (так Fluent Bit может назвать поле с сырой строкой)
+          # Если Fluent Bit отправляет поле "message", замените "log" на "message"
+          log: [ "%{COMMONAPACHELOG}" ]
+    - date:
+        match:
+          - key: "timestamp"
+            patterns: ["dd/MMM/yyyy:HH:mm:ss Z"]
+        destination: "@timestamp"
+    - convert_type:
+        keys: ["response", "bytes"]
+        type: integer
+  sink:
+    - opensearch:
+        hosts: ["https://host.docker.internal:9200"] # Если OpenSearch на хосте, а не в Docker
+        # Если OpenSearch в Docker-сети, используйте имя контейнера, например: ["https://opensearch:9200"]
+        insecure: true
+        username: "admin"
+        password: "xxxxxxxxxx!"
+        index: "fluent-bit-logs-%{yyyy.MM.dd}"
+    - stdout: # Полезно для отладки, чтобы видеть, что приходит в Data Prepper
