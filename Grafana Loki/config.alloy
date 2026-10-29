@@ -1,0 +1,21 @@
+// Источник: читаем файлы логов
+loki.source.file "logs" {
+  targets = [
+    // Nginx
+    { __path__ = "/var/log/nginx/access.log", job = "nginx" },
+    { __path__ = "/var/log/nginx/error.log", job = "nginx" },
+    // MySQL
+    { __path__ = "/var/log/mysql/error.log", job = "mysql" },
+    { __path__ = "/var/log/mysql/mysql-slow.log", job = "mysql-slow" },
+    // PHP-FPM
+    { __path__ = "/var/log/php8.5-fpm.log", job = "php-fpm" },
+  ]
+  forward_to = [loki.write.default.receiver]
+}
+
+// Назначение: отправляем в Loki
+loki.write "default" {
+  endpoint {
+    url = "http://000.000.000.94:3100/loki/api/v1/push"
+  }
+}
