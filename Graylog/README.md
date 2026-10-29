@@ -93,9 +93,9 @@ Certificate was added to keystore
 root@user:~# sudo keytool -import -alias opensearch-node -keystore /usr/share/graylog-server/jvm/lib/security/cacerts -file /etc/opensearch/esnode.pem
 ```
 #### Настройка в Graylog (Input, Token, Sidecar Config)
-1. В UI создал Beats Input
+1. В UI создал Beats Input (0.0.0.0:5044)
 2. Создал API Token для Sidecars: System → Sidecars - Create or reuse a token
-3. Создал конфигурацию коллектора (Filebeat). Sidecars - Configuration - Create Configuration
+3. Создал конфигурацию коллектора (он же filebeat.conf на 1ой ВМ во вложении). Sidecars - Configuration - Create Configuration
 Collector: Filebeat on Linux
 Теги: otus, o11y, cms_logs
 
