@@ -71,14 +71,16 @@ filter {
 }
 ```
 
-В Kibana настроены Data View на индексы (есть скрин для вставки в презентацию) для логов
+В Kibana настроены Data View на индексы (Проектная работа\screens\kibana_logs.jpg) для логов
+```
 logstash-nginx-access-*
 logstash-mysql-slow-*
 logstash-nginx-error-* 
 logstash-mysql-error-* 
+```
 
-Так же можно посомтреть Infrastructure - Uptime - Monitor (есть скрин для вставки в презентацию) для проверки работы Heartbeat
-И метрики в Observability - Infrastructure - Overview
+Так же можно посмотреть результат работы heartbeat в Infrastructure - Uptime - Monitor (Проектная работа\screens\uptime_monitor.jpg) для проверки работы Heartbeat
+И метрики в Observability - Infrastructure - Overview (Проектная работа\screens\kibana_metrics.jpg)
 
 Kibana 185.254.158.94:5601
 Elasticsearch на порту 9200
