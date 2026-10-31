@@ -16,17 +16,107 @@ remote_write:
   - url: "http://localhost:8428/api/v1/write"
 ```
 
-В Prometheus устанволен Alertmanager с настроенными каналами отправки email и Telegram.
+В Prometheus устанволен Alertmanager с настроенными каналами отправки email и Telegram (скрин Проектная работа\screens\alerts_grafana.png).
+Конфиг есть в Alertmanager\etc\alertmanager\alertmanager.yml
+Можешь взять кусок с отправкой в Telegram для вставки из каталога Alertmanager\etc\alertmanager\alertmanager.yml
+
 
 Так же на этом сервере установлены filebeat и metricbeat для отправки логов в Logstash на 2ую ВМ и метрик в Elasticsearch.
-Параллельно Grafana Alloy отправляет логи в Grafana Loki на 2ую ВМ.
+/etc/filebeat/filebeat.yml
+```
+# ------------------------------ Logstash Output -------------------------------
+output.logstash:
+  # The Logstash hosts
+  hosts: ["185.254.158.94:5044"]
 
-Еще на 1ой ВМ установлен Zabbix и Grafana, настроены дашборды инфраструкуры и сборный дашборд мониторинга сайта.
+  # Optional SSL. By default is off.
+  # List of root certificates for HTTPS server verifications
+  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
+
+  # Certificate for SSL client authentication
+  #ssl.certificate: "/etc/pki/client/cert.pem"
+
+  # Client Certificate Key
+  #ssl.key: "/etc/pki/client/cert.key"
+```
+
+Для filebeat включены модули 
+/etc/filebeat/modules.d/mysql.yml
+```
+- module: mysql
+  # Error logs
+  error:
+    enabled: true
+
+    # Set custom paths for the log files. If left empty,
+    # Filebeat will choose the paths depending on your OS.
+    #var.paths:
+
+  # Slow logs
+  slowlog:
+    enabled: true
+```
+/etc/filebeat/modules.d/nginx.yml
+```
+- module: nginx
+  # Access logs
+  access:
+    enabled: true
+
+    # Set custom paths for the log files. If left empty,
+    # Filebeat will choose the paths depending on your OS.
+    #var.paths:
+
+  # Error logs
+  error:
+    enabled: true
+```
+/etc/metricbeat/metricbeat.yml
+```
+# ---------------------------- Elasticsearch Output ----------------------------
+output.elasticsearch:
+  # Array of hosts to connect to.
+  hosts: ["https://185.254.158.94:9200"]
+  ssl.certificate_authorities: ["/etc/elasticsearch/certs/http_ca.crt"]
+  preset: balanced
+
+  username: "elastic"
+  password: "dFxxxxxxxxxxxxxxx9UM"
+```
+
+
+Параллельно Grafana Alloy отправляет логи в Grafana Loki на 2ую ВМ.
+конфиг alloy
+```
+// Источник: читаем файлы логов
+loki.source.file "logs" {
+  targets = [
+    // Nginx
+    { __path__ = "/var/log/nginx/access.log", job = "nginx" },
+    { __path__ = "/var/log/nginx/error.log", job = "nginx" },
+    // MySQL
+    { __path__ = "/var/log/mysql/error.log", job = "mysql" },
+    { __path__ = "/var/log/mysql/mysql-slow.log", job = "mysql-slow" },
+    // PHP-FPM
+    { __path__ = "/var/log/php8.5-fpm.log", job = "php-fpm" },
+  ]
+  forward_to = [loki.write.default.receiver]
+}
+
+// Назначение: отправляем в Loki
+loki.write "default" {
+  endpoint {
+    url = "http://185.254.158.94:3100/loki/api/v1/push"
+  }
+```
+
+
+Еще на 1ой ВМ установлен Zabbix (скрин Проектная работа\screens\zabbix.png) и Grafana, настроены дашборды инфраструкуры и сборный дашборд мониторинга сайта (скрин Проектная работа\screens\grafana_dash.png).
 + в Grafana и Zabbix настроены алерты. В Grafana через канал AlertManager, в Zabbix через Telegram.
 
 
 2ая удаленная ВМ - 185.254.158.94
-На ней установлены Heartbeat для проверки доступности сайта на 1ой ВМ, Logstash, Elasticsearch + Kibana , Grafana Loki.
+На ней установлены Heartbeat (для проверки доступности сайта на 1ой ВМ), Logstash, Elasticsearch + Kibana и Grafana Loki.
 Logstash принимает логи от filebeat, проводит обработку и отправляет в Elasticsearch.
 ```
 filter {
@@ -84,3 +174,36 @@ logstash-mysql-error-*
 
 Kibana 185.254.158.94:5601
 Elasticsearch на порту 9200
+
+/etc/loki/loki-config.yaml
+Grafana Alloy
+```
+auth_enabled: false
+
+server:
+  http_listen_address: 0.0.0.0
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /var/lib/loki
+  storage:
+    filesystem:
+      chunks_directory: /var/lib/loki/chunks
+      rules_directory: /var/lib/loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+```
