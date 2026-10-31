@@ -23,11 +23,34 @@ receivers:
       - bot_token: '8xxxxx9309:AAFxxxxxxxxxxxxxxxxxx_PATKuw'
         chat_id: 8xxxxx35
         api_url: 'https://api.telegram.org'
-        message: |
-          {{ range .Alerts }}
-          🚨 *{{ .Labels.severity | toUpper }}*: {{ .Annotations.summary }}
-          {{ .Annotations.description }}
-          {{ end }}
+        parse_mode: 'HTML'
+        send_resolved: true
+        message: |-
+          {{- if eq .Status "firing" }}
+          🔥 <b>[FIRING] {{ .CommonLabels.alertname }}</b>
+          {{- else }}
+          ✅ <b>[RESOLVED] {{ .CommonLabels.alertname }}</b>
+          {{- end }}
+
+          {{- if .CommonAnnotations.summary }}
+          📌 <b>Проблема:</b> {{ .CommonAnnotations.summary }}
+          {{- end }}
+
+          {{- if .CommonAnnotations.description }}
+          📝 <b>Детали:</b> {{ .CommonAnnotations.description }}
+          {{- end }}
+
+          {{- if .CommonLabels.severity }}
+          ⚠️ <b>Важность:</b> {{ .CommonLabels.severity | toUpper }}
+          {{- end }}
+
+          {{- if .CommonLabels.instance }}
+          🖥️ <b>Инстанс:</b> {{ .CommonLabels.instance }}
+          {{- end }}
+
+          {{- if .CommonLabels.job }}
+          ⚙️ <b>Сервис:</b> {{ .CommonLabels.job }}
+          {{- end }}
 
   # Оповещения по Email
   - name: 'email'
@@ -47,11 +70,34 @@ receivers:
       - bot_token: '8xxxxx9309:AAFxxxxxxxxxxxxxxxxxx_PATKuw'
         chat_id: 8xxxxx35
         api_url: 'https://api.telegram.org'
-        message: |
-          {{ range .Alerts }}
-          🔔 *{{ .Labels.severity | toUpper }}*: {{ .Annotations.summary }}
-          {{ .Annotations.description }}
-          {{ end }}
+        parse_mode: 'HTML'
+        send_resolved: true
+        message: |-
+          {{- if eq .Status "firing" }}
+          🔔 <b>[FIRING] {{ .CommonLabels.alertname }}</b>
+          {{- else }}
+          ✅ <b>[RESOLVED] {{ .CommonLabels.alertname }}</b>
+          {{- end }}
+
+          {{- if .CommonAnnotations.summary }}
+          📌 <b>Проблема:</b> {{ .CommonAnnotations.summary }}
+          {{- end }}
+
+          {{- if .CommonAnnotations.description }}
+          📝 <b>Детали:</b> {{ .CommonAnnotations.description }}
+          {{- end }}
+
+          {{- if .CommonLabels.severity }}
+          ⚠️ <b>Важность:</b> {{ .CommonLabels.severity | toUpper }}
+          {{- end }}
+
+          {{- if .CommonLabels.instance }}
+          🖥️ <b>Инстанс:</b> {{ .CommonLabels.instance }}
+          {{- end }}
+
+          {{- if .CommonLabels.job }}
+          ⚙️ <b>Сервис:</b> {{ .CommonLabels.job }}
+          {{- end }}
 
 inhibit_rules:
   - source_match:
