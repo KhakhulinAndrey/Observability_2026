@@ -140,8 +140,8 @@ output.elasticsearch:
 
   # Authentication credentials - either API key or username/password.
   #api_key: "id:api_key"
-  username: "elastic"
-  password: "IxxxxxxxxxxxxxxxxxxBN"
+  username: "elxxxic"
+  password: "IxxxxxxxxxxxxxxxxxxхN"
   ssl.certificate_authorities: ["/etc/elasticsearch/certs/http_ca.crt"]
 
 # ------------------------------ Logstash Output -------------------------------
