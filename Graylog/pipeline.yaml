@@ -37,6 +37,6 @@ log-pipeline:
         # Если OpenSearch в Docker-сети, используйте имя контейнера, например: ["https://opensearch:9200"]
         insecure: true
         username: "admin"
-        password: "Civic117004!"
+        password: "xxxxxxxxx04!"
         index: "fluent-bit-logs-%{yyyy.MM.dd}"
     - stdout: # Полезно для отладки, чтобы видеть, что приходит в Data Prepper
